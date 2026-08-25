@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>SFX Overlay</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: -apple-system, "Segoe UI", sans-serif;
+  }
+  #toast {
+    position: fixed;
+    top: 3px;
+    left: 50%;
+    z-index: 2;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(20, 20, 24, 0.85);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 18px;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    white-space: nowrap;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  #timers {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<canvas id="timers" width="1080" height="30"></canvas>
+<script>
+  // This page only needs to exist as an OBS Browser Source so its audio
+  // gets mixed into your stream. It stays invisible unless a sound fires,
+  // then it shows a small toast for a couple seconds. It also draws
+  // countdown progress bars for "timer" redemptions (see config/timers.json).
+  let timers = [];
+
+  function connect() {
+    const ws = new WebSocket(`ws://${location.host}/ws-overlay`);
+    ws.onmessage = (evt) => {
+      let data;
+      try { data = JSON.parse(evt.data); } catch { return; }
+      if (data.type === 'play') playSound(data);
+      else if (data.type === 'timer-sync') timers = data.timers || [];
+    };
+    ws.onclose = () => setTimeout(connect, 2000);
+    ws.onerror = () => ws.close();
+  }
+
+  function playSound({ src, volume, label, user }) {
+    const audio = new Audio(src);
+    audio.volume = Math.min(Math.max(volume ?? 0.8, 0), 1);
+    audio.play().catch((err) => console.error('Playback blocked:', err));
+
+    const toast = document.getElementById('toast');
+    toast.textContent = `${label}${user ? ' — ' + user : ''}`;
+    toast.classList.add('show');
+    clearTimeout(toast._hideTimer);
+    toast._hideTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  // ---------- timer progress bars ----------
+  const timerCanvas = document.getElementById('timers');
+  const timerCtx = timerCanvas.getContext('2d');
+  const BAR_HEIGHT = 30;
+  const MAX_TOTAL_HEIGHT = 120;
+  const BAR_WIDTH = 1080;
+  const barColors = new Map(); // key -> random color, assigned per bar occurrence
+
+  function colorForKey(key) {
+    if (!barColors.has(key)) {
+      barColors.set(key, `hsl(${Math.floor(Math.random() * 360)}, 75%, 45%)`);
+    }
+    return barColors.get(key);
+  }
+
+  function formatMMSS(ms) {
+    const totalSec = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  function drawTimers() {
+    const now = Date.now();
+    // drop expired bars immediately client-side rather than waiting up to
+    // 1s for the server's next prune tick, so removal/reflow feels instant
+    const visible = timers.filter((t) => t.endTs > now);
+    const visibleKeys = new Set(visible.map((t) => t.key));
+    for (const key of barColors.keys()) {
+      if (!visibleKeys.has(key)) barColors.delete(key);
+    }
+    // Cap the stack's total height at MAX_TOTAL_HEIGHT -- each bar is
+    // BAR_HEIGHT tall normally, but once enough bars are active that they'd
+    // exceed the cap, they collapse (shrink) so the stack still fits. Label
+    // text stays a fixed size regardless, so it can visually spill past a
+    // collapsed bar's edges -- that's expected, not handled.
+    const rowHeight = visible.length
+      ? Math.min(BAR_HEIGHT, MAX_TOTAL_HEIGHT / visible.length)
+      : BAR_HEIGHT;
+
+    timerCanvas.height = visible.length * rowHeight || 1;
+    timerCtx.clearRect(0, 0, timerCanvas.width, timerCanvas.height);
+
+    visible.forEach((t, i) => {
+      const frac = Math.min(1, Math.max(0, (t.endTs - now) / (t.endTs - t.startTs)));
+      const y = i * rowHeight;
+      const barWidth = BAR_WIDTH * frac;
+
+      timerCtx.fillStyle = colorForKey(t.key);
+      timerCtx.fillRect(0, y, barWidth, rowHeight);
+
+      const label = `${t.label} — ${formatMMSS(t.endTs - now)}`;
+      timerCtx.font = '9pt Bahnschrift';
+      timerCtx.fillStyle = '#fff';
+      timerCtx.textBaseline = 'middle';
+      const textWidth = timerCtx.measureText(label).width;
+
+      if (textWidth <= barWidth) {
+        timerCtx.textAlign = 'center';
+        timerCtx.fillText(label, barWidth / 2, y + rowHeight / 2);
+      } else {
+        timerCtx.textAlign = 'left';
+        timerCtx.fillText(label, barWidth + 8, y + rowHeight / 2);
+      }
+    });
+
+    requestAnimationFrame(drawTimers);
+  }
+
+  connect();
+  requestAnimationFrame(drawTimers);
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "twitch-sfx-redemptions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-hosted channel points -> SFX overlay for OBS. No third-party cloud service involved.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "fire-test": "node scripts/fire-test-redemptions.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ws": "^8.17.0"
+  }
+}

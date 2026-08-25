@@ -1,0 +1,9 @@
+{
+  "_comment": "Keys must match your Twitch reward TITLES exactly (matching is case-insensitive and trims whitespace). 'seconds' is the timer duration added on redemption -- re-redeeming the same reward while its bar is already counting down EXTENDS it by this amount instead of restarting it. This file is re-read on every redemption, so you can edit and save it live. NOTE: the titles below are a best guess from shorthand, not confirmed real Twitch reward titles -- double-check and edit as needed.",
+
+  "60s of BasicSaffer": { "seconds": 60 },
+  "60s of BasicScottish": { "seconds": 60 },
+  "120s of BasicSaffer": { "seconds": 120 },
+  "120s of BasicScottish": { "seconds": 120 },
+  "Cat Game (Meow 10x)": { "seconds": 300 }
+}
