@@ -1,6 +1,6 @@
 {
   "_comment": "Keys must match your Twitch reward TITLES exactly (matching is case-insensitive and trims whitespace, but the words must match). 'file' is the filename inside /sounds. 'volume' is 0.0-1.0. This file is re-read on every redemption, so you can edit and save it while the server is running -- no restart needed.",
 
-  "tada": { "file": "tada.mp3", "volume": 0.8 },
+  "tada 🎉": { "file": "tada.mp3", "volume": 0.8 },
   "Ship Monkeys!": { "file": "shmonkeys.mp3", "volume": 0.8 }
 }
