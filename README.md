@@ -1,9 +1,9 @@
-# Twitch SFX Redemptions (self-hosted)
+# Stream SFX
 
-Runs entirely on your own PC. No third-party dashboard, no cloud account,
-no bot with your password — just your Twitch Client ID and a token you
-generate yourself. It listens for channel point redemptions via Twitch's
-official EventSub WebSocket and plays a sound through an OBS Browser Source.
+This is a bot I use for my streams. It runs 100% locally and runs happily 
+in the background. You will need to BYO Twitch Client ID & API token. 
+It listens for channel point redemptions via Twitch's official 
+EventSub WebSocket and plays a sound through an OBS Browser Source.
 
 ## 1. Register a Twitch application (one-time, ~2 min)
 
@@ -41,8 +41,8 @@ Twitch SFX Redemptions running at http://localhost:8420
     http://localhost:8420/auth
 ```
 
-Open that `/auth` link **while logged into Twitch as your broadcaster account**,
-click Authorize. It'll bounce back and say "Connected as yourname" — that's it,
+Open that `/auth` link while logged into Twitch as your broadcaster account,
+click Authorize. It'll bounce back and say "Connected as yourname", then
 leave the terminal window running while you stream.
 
 The token is a temporary Twitch session token (no password or secret is
@@ -109,7 +109,7 @@ down (they don't persist to disk).
 ## 8. Test
 
 Redeem the reward yourself (or ask a mod) and confirm you hear it through
-OBS. Check the terminal — every redemption is logged there, matched or not,
+OBS. Check the terminal, every redemption is logged there (matched or not)
 which is the easiest way to debug a title/typo mismatch.
 
 To test locally without waiting on real Twitch redemptions, run the server
@@ -138,7 +138,7 @@ it fresh.
 
 ## Troubleshooting
 
-- **Nothing happens on redemption**: check the terminal log — it logs every
+- **Nothing happens on redemption**: check the terminal log. It logs every
   redemption whether or not it matched a sound. If it's not logging at all,
   re-check `/auth` and that the server says "Subscribed to channel point
   redemptions. Listening...".
